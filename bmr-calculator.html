@@ -1,13 +1,392 @@
 <!DOCTYPE html>
-<html>
-<head><title>BMR Calculator</title><link rel="stylesheet" href="style.css"></head>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BMR Calculator</title>
+
+<style>
+body{
+  font-family:arial;
+  text-align:center;
+  background:#fff;
+  padding-bottom:70px;
+}
+h2{color:#003366}
+.panel{
+  background:#eee;
+  border:1px solid #bbb;
+  padding:15px;
+  display:inline-block;
+}
+.result_box{
+  background:#e3edda;
+  border:1px solid #8db46d;
+  padding:8px;
+  margin-top:10px;
+}
+input[type=number], select{
+  border:1px solid #044284;
+  padding:5px;
+}
+input[type=submit]{
+  background:#4c7b25;
+  color:#fff;
+  border:0;
+  padding:10px 40px;
+  font-size:16px;
+}
+input[type=button]{
+  background:#ababab;
+  color:#fff;
+  border:0;
+  padding:10px 15px;
+}
+.cbcontainer{
+  display:block;
+  position:relative;
+  padding-left:28px;
+  margin:5px 0;
+  cursor:pointer;
+}
+.cbcontainer input{
+  position:absolute;
+  opacity:0;
+}
+.rbmark{
+  position:absolute;
+  left:0;
+  top:2px;
+  height:16px;
+  width:16px;
+  border:2px solid #336699;
+  border-radius:50%;
+}
+.cbcontainer input:checked ~ .rbmark{
+  background:#336699;
+}
+#settingsBtn{
+  color:#069;
+  cursor:pointer;
+  font-weight:bold;
+}
+#settingsBox{
+  display:none;
+  border-top:1px solid #bbb;
+  margin-top:10px;
+  padding-top:10px;
+}
+header{
+  background:#003366;
+  padding:12px 0;
+}
+#breadcrumbs{
+  max-width:1100px;
+  margin:0 auto;
+  text-align:left;
+  font-size:14px;
+}
+#breadcrumbs a,#breadcrumbs span{
+  color:#fff;
+  text-decoration:none;
+}
+footer{
+  background:#000;
+  color:#fff;
+  padding:15px 10px;
+  font-size:14px;
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+}
+</style>
+</head>
+
 <body>
+
+<header>
+  <div id="breadcrumbs">
+    <a href="index.html">Home</a> /
+    <a href="health.html">Health Calculators</a> /
+    <span>BMR Calculator</span>
+  </div>
+</header>
+
 <h2>BMR Calculator</h2>
-<input id="bmrWeight" placeholder="Weight (kg)">
-<input id="bmrHeight" placeholder="Height (cm)">
-<input id="bmrAge" placeholder="Age">
-<button onclick="calculateBMR()">Calculate</button>
-<p id="bmrResult"></p>
-<script src="script.js"></script>
+
+<div class="panel">
+
+<p>
+Age:
+<input type="number" id="age" value="25">
+</p>
+
+<p>
+Gender:
+<label class="cbcontainer">Male
+<input type="radio" name="gender" value="male" checked>
+<span class="rbmark"></span>
+</label>
+<label class="cbcontainer">Female
+<input type="radio" name="gender" value="female">
+<span class="rbmark"></span>
+</label>
+</p>
+
+<p>
+Height:
+<input type="number" id="height" value="180">
+<select id="heightUnit" onchange="convertHeight()">
+  <option value="cm" selected>cm</option>
+  <option value="m">meter</option>
+  <option value="in">inches</option>
+</select>
+</p>
+
+<p>
+Weight:
+<input type="number" id="weight" value="60">
+<select id="weightUnit" onchange="convertWeight()">
+  <option value="kg" selected>kg</option>
+  <option value="g">grams</option>
+</select>
+</p>
+
+<p id="settingsBtn" onclick="toggleSettings()">⚙ Settings</p>
+
+<div id="settingsBox">
+<p><strong>Results unit:</strong></p>
+<label class="cbcontainer">Calories
+<input type="radio" name="unit" value="cal" checked>
+<span class="rbmark"></span>
+</label>
+<label class="cbcontainer">Kilojoules
+<input type="radio" name="unit" value="kj">
+<span class="rbmark"></span>
+</label>
+
+<p><strong>BMR Formula:</strong></p>
+<label class="cbcontainer">Mifflin St Jeor
+<input type="radio" name="formula" value="mifflin" checked>
+<span class="rbmark"></span>
+</label>
+<label class="cbcontainer">Harris Benedict
+<input type="radio" name="formula" value="harris">
+<span class="rbmark"></span>
+</label>
+<label class="cbcontainer">Katch McArdle
+<input type="radio" name="formula" value="katch">
+<span class="rbmark"></span>
+</label>
+
+<p>
+Body Fat:
+<input type="number" id="fat" value="20"> %
+</p>
+</div>
+
+<hr>
+
+<input type="submit" value="Calculate" onclick="calculateBMR()">
+<input type="button" value="Clear" onclick="clearAll()">
+
+<div id="result" class="result_box" style="display:none"></div>
+
+</div>
+
+<script>
+let baseHeightCm = 180;
+let baseWeightKg = 60;
+
+function toggleSettings(){
+  settingsBox.style.display =
+    settingsBox.style.display === "none" ? "block" : "none";
+}
+
+function convertHeight(){
+  let unit = heightUnit.value;
+  let val = parseFloat(height.value);
+  if(isNaN(val)) return;
+
+  if(unit === "cm") baseHeightCm = val;
+  if(unit === "m") baseHeightCm = val * 100;
+  if(unit === "in") baseHeightCm = val * 2.54;
+
+  if(unit === "cm") height.value = baseHeightCm.toFixed(2);
+  if(unit === "m") height.value = (baseHeightCm/100).toFixed(2);
+  if(unit === "in") height.value = (baseHeightCm/2.54).toFixed(2);
+}
+
+function convertWeight(){
+  let unit = weightUnit.value;
+  let val = parseFloat(weight.value);
+  if(isNaN(val)) return;
+
+  if(unit === "kg") baseWeightKg = val;
+  if(unit === "g") baseWeightKg = val / 1000;
+
+  if(unit === "kg") weight.value = baseWeightKg.toFixed(2);
+  if(unit === "g") weight.value = (baseWeightKg*1000).toFixed(0);
+}
+
+function calculateBMR(){
+  let ageVal = +age.value;
+  let fatVal = +fat.value;
+  let gender = document.querySelector('input[name="gender"]:checked').value;
+  let unit = document.querySelector('input[name="unit"]:checked').value;
+  let formula = document.querySelector('input[name="formula"]:checked').value;
+
+  let h = baseHeightCm;
+  let w = baseWeightKg;
+  let bmr = 0;
+
+  if(formula==="mifflin")
+    bmr = (10*w)+(6.25*h)-(5*ageVal)+(gender==="male"?5:-161);
+
+  if(formula==="harris")
+    bmr = gender==="male"
+      ? 88.362+(13.397*w)+(4.799*h)-(5.677*ageVal)
+      : 447.593+(9.247*w)+(3.098*h)-(4.330*ageVal);
+
+  if(formula==="katch"){
+    let lbm = w*(1-fatVal/100);
+    bmr = 370+(21.6*lbm);
+  }
+
+  if(unit==="kj") bmr*=4.184;
+
+  result.style.display="block";
+  result.innerHTML="<strong>Your BMR:</strong> "+Math.round(bmr);
+}
+
+function clearAll(){
+  result.style.display="none";
+}
+</script>
+
+<section id="bmr-info">
+
+<h3>Related</h3>
+<p>
+<a href="body-fat-calculator.html">Body Fat Calculator</a> |
+<a href="bmi-calculator.html">BMI Calculator</a>
+</p>
+
+<p>
+<strong>Basal Metabolic Rate (BMR)</strong> is the amount of energy the body needs while completely at rest in a neutral environment, when digestion is inactive. It is similar to how much fuel a parked car consumes while idling. In this state, energy is used only to maintain essential organs such as the heart, brain, lungs, kidneys, liver, nervous system, muscles, skin, and reproductive organs.
+</p>
+
+<p>
+For most people, nearly <strong>70% of daily calorie expenditure</strong> is used for basic bodily upkeep. Physical activity contributes about <strong>20%</strong>, while digestion of food—known as <strong>thermogenesis</strong>—accounts for roughly <strong>10%</strong>.
+</p>
+
+<h3>BMR Measurement</h3>
+<p>
+BMR is measured under strict conditions while a person is awake, fully rested, and free from physical or mental stress. Because basal metabolism forms the largest portion of daily calorie requirements, total daily energy needs are calculated by multiplying BMR by an activity factor ranging from <strong>1.2 to 1.9</strong>, depending on activity level.
+</p>
+
+<p>
+In practice, BMR is usually estimated using statistical equations rather than direct measurement.
+</p>
+
+<h3>BMR Estimation Equations</h3>
+<p>
+The <strong>Harris-Benedict Equation</strong> was one of the earliest methods used to calculate BMR. It was revised in 1984 to improve accuracy. In 1990, the <strong>Mifflin-St Jeor Equation</strong> was introduced and has since been shown to be more accurate than the revised Harris-Benedict Equation.
+</p>
+
+<p>
+The <strong>Katch-McArdle Formula</strong> differs by calculating resting daily energy expenditure (RDEE) using lean body mass. This makes it more accurate for lean individuals who know their body fat percentage. For most users, the Mifflin-St Jeor Equation is considered the most reliable.
+</p>
+
+<h3>BMR Formulas</h3>
+
+<h4>Mifflin-St Jeor Equation</h4>
+<p>
+<strong>Men:</strong> BMR = 10W + 6.25H − 5A + 5<br>
+<strong>Women:</strong> BMR = 10W + 6.25H − 5A − 161
+</p>
+
+<h4>Revised Harris-Benedict Equation</h4>
+<p>
+<strong>Men:</strong> BMR = 13.397W + 4.799H − 5.677A + 88.362<br>
+<strong>Women:</strong> BMR = 9.247W + 3.098H − 4.330A + 447.593
+</p>
+
+<h4>Katch-McArdle Formula</h4>
+<p>
+BMR = 370 + 21.6 × (1 − F) × W
+</p>
+
+<p>
+<strong>Where:</strong><br>
+W = body weight in kilograms<br>
+H = height in centimeters<br>
+A = age<br>
+F = body fat percentage
+</p>
+
+<h3>BMR Variables</h3>
+
+<p>
+<strong>Muscle Mass:</strong> Aerobic exercises such as running or cycling do not directly increase BMR. Anaerobic exercises like weight lifting increase muscle mass, which raises resting energy expenditure.
+</p>
+
+<p>
+<strong>Age:</strong> BMR decreases with age due to muscle loss and reduced metabolic efficiency.
+</p>
+
+<p>
+<strong>Genetics:</strong> Hereditary traits influence metabolic rate and energy expenditure.
+</p>
+
+<p>
+<strong>Weather:</strong> Cold environments increase BMR as the body expends energy to maintain temperature. Excessive heat also raises BMR due to cooling processes. BMR increases by approximately <strong>7% for every 1.36°F rise</strong> in body temperature.
+</p>
+
+<p>
+<strong>Diet:</strong> Small, frequent meals may slightly increase BMR, while starvation can reduce BMR by up to <strong>30%</strong>.
+</p>
+
+<p>
+<strong>Pregnancy & Hormones:</strong> Pregnancy raises BMR to support fetal growth. Menopause may increase or decrease BMR depending on hormonal changes.
+</p>
+
+<p>
+<strong>Supplements:</strong> Certain supplements and stimulants, such as caffeine, can temporarily increase BMR.
+</p>
+
+<h3>BMR Tests</h3>
+<p>
+Online BMR calculators provide estimates only. For precise results, BMR should be measured by a certified professional using calorimetry devices available at medical clinics and fitness centers.
+</p>
+
+<h3>Resting Metabolic Rate (RMR)</h3>
+<p>
+Although often confused with BMR, <strong>Resting Metabolic Rate (RMR)</strong> measures energy expenditure in a relaxed but not fully inactive state. BMR requires stricter conditions than RMR.
+</p>
+
+<h3>Modern Wisdom</h3>
+<p>
+A 2005 meta-analysis study on BMR found that even after accounting for known factors, about <strong>26% of metabolic variation</strong> remains unexplained. Therefore, BMR and TDEE calculations are estimates, not exact values.
+</p>
+
+<p>
+Tracking daily habits such as diet, exercise, and lifestyle provides better long-term results than relying solely on BMR calculations.
+</p>
+
+<h3>Reference</h3>
+<p class="smalltext">
+Johnstone AM, Murison SD, Duncan JS, Rance KA, Speakman JR. <br>
+<i>Factors influencing variation in basal metabolic rate include fat-free mass, fat mass, age, and circulating thyroxine but not sex, circulating leptin, or triiodothyronine.</i><br>
+American Journal of Clinical Nutrition, 2005; 82: 941–948.
+</p>
+
+</section>
+
+
+<footer>
+<p>© 2026 Online Calculators • All Rights Reserved • Ankit Dara</p>
+</footer>
+
 </body>
 </html>
