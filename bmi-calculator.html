@@ -1,15 +1,427 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<style>
+ /* ===== BASE ===== */
+body{
+  font-family:arial;
+  text-align:center;
+  background:#fff;
+  padding-bottom:70px; /* footer space */
+}
+
+h2{color:#003366}
+
+.panel{
+  background:#eee;
+  border:1px solid #bbb;
+  padding:15px;
+  display:inline-block;
+}
+
+.result_box{
+  background:#e3edda;
+  border:1px solid #8db46d;
+  padding:8px;
+  margin-top:10px;
+}
+
+input[type=number]{
+  border:1px solid #044284;
+  padding:5px;
+  width:90px;
+}
+
+input[type=submit]{
+  background:#4c7b25;
+  color:#fff;
+  border:0;
+  padding:10px 40px;
+  font-size:16px;
+}
+
+input[type=button]{
+  background:#ababab;
+  color:#fff;
+  border:0;
+  padding:10px 15px;
+}
+
+/* ===== RADIO / CHECK ===== */
+.cbcontainer{
+  display:block;
+  position:relative;
+  padding-left:28px;
+  margin:5px 0;
+  cursor:pointer;
+}
+
+.cbcontainer input{
+  position:absolute;
+  opacity:0;
+}
+
+.rbmark{
+  position:absolute;
+  left:0;
+  top:2px;
+  height:16px;
+  width:16px;
+  border:2px solid #336699;
+  border-radius:50%;
+}
+
+.cbcontainer input:checked ~ .rbmark{
+  background:#336699;
+}
+
+/* ===== SETTINGS ===== */
+#settingsBtn{
+  color:#069;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+#settingsBox{
+  display:none;
+  border-top:1px solid #bbb;
+  margin-top:10px;
+  padding-top:10px;
+}
+
+/* ===== HEADER (SAME AS BMI) ===== */
+header{
+  background:#003366;
+  padding:12px 0;
+}
+
+#breadcrumbs{
+  max-width:1100px;
+  margin:0 auto;
+  text-align:left;
+  font-size:14px;
+}
+
+#breadcrumbs a,
+#breadcrumbs span{
+  color:#fff;
+  text-decoration:none;
+}
+
+#breadcrumbs a:hover{
+  text-decoration:underline;
+}
+
+/* ===== FIXED FOOTER (SAME AS BMI) ===== */
+footer{
+  background:#000;
+  color:#fff;
+  padding:15px 10px;
+  font-size:14px;
+
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  z-index:999;
+}
+
+footer p{
+  margin:0;
+  text-align:center;
+}
+
+  </style>
+
+<meta charset="UTF-8">
 <title>BMI Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+  <header>
+    <div id="breadcrumbs">
+      <a href="index.html">Home</a>
+      <span> / </span>
+      <a href="health.html">Health Calculators</a>
+      <span> / </span>
+      <span>BMI Calculator</span>
+    </div>
+  </header>
+  
+
 <h2>BMI Calculator</h2>
-<input type="number" id="bmiHeight" placeholder="Height (cm)">
-<input type="number" id="bmiWeight" placeholder="Weight (kg)">
-<button onclick="calculateBMI()">Calculate</button>
-<p id="bmiResult"></p>
-<script src="script.js"></script>
+
+<div class="panel" style="max-width:540px;margin:auto;">
+
+<table cellpadding="6">
+
+<tr>
+  <td>Age</td>
+  <td>
+    <input type="number" id="age" class="in2char" value="25">
+    <span class="smalltext">ages: 2 - 120</span>
+  </td>
+</tr>
+
+<tr>
+  <td>Gender</td>
+  <td>
+    <label class="cbcontainer">Male
+      <input type="radio" name="gender" checked>
+      <span class="rbmark"></span>
+    </label>
+
+    <label class="cbcontainer">Female
+      <input type="radio" name="gender">
+      <span class="rbmark"></span>
+    </label>
+  </td>
+</tr>
+
+<tr>
+  <td>Height</td>
+  <td>
+    <input type="number" id="height" class="inshortfull" value="180">
+    <select id="heightUnit">
+      <option value="cm">cm</option>
+      <option value="m">meter</option>
+      <option value="inch">inch</option>
+      <option value="ft">feet</option>
+    </select>
+  </td>
+</tr>
+
+<tr>
+  <td>Weight</td>
+  <td>
+    <input type="number" id="weight" class="inshortfull" value="65">
+    <select id="weightUnit">
+      <option value="kg">kg</option>
+      <option value="g">gram</option>
+      <option value="lb">pound</option>
+    </select>
+  </td>
+</tr>
+
+</table>
+
+<br>
+
+<input type="submit" value="Calculate" onclick="calcBMI()">
+<input type="reset" value="Clear" onclick="clearBMI()">
+
+<br><br>
+
+<div id="result" class="result_box" style="display:none;"></div>
+
+</div>
+
+<script>
+function calcBMI(){
+  var h = parseFloat(document.getElementById("height").value);
+  var w = parseFloat(document.getElementById("weight").value);
+  var hu = document.getElementById("heightUnit").value;
+  var wu = document.getElementById("weightUnit").value;
+
+  if(h <= 0 || w <= 0){
+    alert("Please enter valid values");
+    return;
+  }
+
+  /* Convert height to cm */
+  if(hu === "m") h = h * 100;
+  if(hu === "inch") h = h * 2.54;
+  if(hu === "ft") h = h * 30.48;
+
+  /* Convert weight to kg */
+  if(wu === "g") w = w / 1000;
+  if(wu === "lb") w = w * 0.453592;
+
+  var bmi = (w / ((h/100)*(h/100))).toFixed(2);
+  var cat = "";
+
+  if(bmi < 18.5) cat = "Underweight";
+  else if(bmi < 25) cat = "Normal weight";
+  else if(bmi < 30) cat = "Overweight";
+  else cat = "Obese";
+
+  var res = document.getElementById("result");
+  res.style.display = "block";
+  res.innerHTML =
+    "<b>BMI:</b> " + bmi +
+    "<br><b>Category:</b> " + cat;
+}
+
+function clearBMI(){
+  document.getElementById("result").style.display = "none";
+}
+</script>
+<section>
+
+<h2>The Body Mass Index (BMI) Calculator</h2>
+
+<p>
+The <strong>Body Mass Index (BMI) Calculator</strong> is a widely used tool to calculate an individual’s BMI value and determine the corresponding weight status while considering age. This calculator supports multiple unit systems and automatically converts values to ensure accurate results. In addition to BMI, it also calculates the <strong>Ponderal Index (PI)</strong>, which is especially useful for very tall or very short individuals.
+</p>
+
+<hr>
+
+<h2>BMI Introduction</h2>
+
+<p>
+<strong>Body Mass Index (BMI)</strong> is a numerical measurement used to assess a person’s leanness or corpulence based on height and weight. It is designed to estimate body tissue mass and is commonly used as a general indicator of whether a person has a healthy body weight for their height.
+</p>
+
+<p>
+BMI values help classify individuals into categories such as <strong>underweight, normal weight, overweight, or obese</strong>. These BMI ranges may vary slightly depending on age, region, and health guidelines. While BMI does not directly measure body fat, it is a valuable screening tool to identify potential health risks and determine whether further medical evaluation is required.
+</p>
+
+<hr>
+
+<h2>BMI Table for Adults (Age 20+)</h2>
+
+<p>
+The following table is based on recommendations from the <strong>World Health Organization (WHO)</strong>. It applies to both men and women aged 20 years or older.
+</p>
+
+<table class="cinfoT">
+<tr><th>Classification</th><th>BMI Range (kg/m²)</th></tr>
+<tr><td>Severe Thinness</td><td>&lt; 16</td></tr>
+<tr><td>Moderate Thinness</td><td>16 – 17</td></tr>
+<tr><td>Mild Thinness</td><td>17 – 18.5</td></tr>
+<tr><td>Normal</td><td>18.5 – 25</td></tr>
+<tr><td>Overweight</td><td>25 – 30</td></tr>
+<tr><td>Obese Class I</td><td>30 – 35</td></tr>
+<tr><td>Obese Class II</td><td>35 – 40</td></tr>
+<tr><td>Obese Class III</td><td>&gt; 40</td></tr>
+</table>
+
+<hr>
+
+<h2>BMI for Children and Teens (Age 2–20)</h2>
+
+<p>
+For children and teenagers aged 2 to 20, the <strong>Centers for Disease Control and Prevention (CDC)</strong> recommends BMI categorization based on age-specific percentiles rather than fixed values.
+</p>
+
+<table class="cinfoT">
+<tr><th>Category</th><th>Percentile Range</th></tr>
+<tr><td>Underweight</td><td>&lt; 5%</td></tr>
+<tr><td>Healthy Weight</td><td>5% – 85%</td></tr>
+<tr><td>At Risk of Overweight</td><td>85% – 95%</td></tr>
+<tr><td>Overweight</td><td>&gt; 95%</td></tr>
+</table>
+
+<hr>
+
+<h2>Health Risks Associated with Being Overweight</h2>
+
+<p>
+Being overweight or obese significantly increases the risk of several serious health conditions, according to the <strong>CDC</strong>:
+</p>
+
+<ul>
+<li>High blood pressure</li>
+<li>Unhealthy cholesterol levels</li>
+<li>Type 2 diabetes</li>
+<li>Coronary heart disease and stroke</li>
+<li>Gallbladder disease</li>
+<li>Osteoarthritis</li>
+<li>Sleep apnea and breathing disorders</li>
+<li>Certain cancers (breast, colon, kidney, liver, gallbladder)</li>
+<li>Reduced quality of life</li>
+<li>Mental health conditions such as depression and anxiety</li>
+<li>Increased risk of early mortality</li>
+</ul>
+
+<hr>
+
+<h2>Health Risks Associated with Being Underweight</h2>
+
+<ul>
+<li>Malnutrition and vitamin deficiencies</li>
+<li>Anemia</li>
+<li>Osteoporosis and bone weakness</li>
+<li>Reduced immune function</li>
+<li>Growth and development issues</li>
+<li>Hormonal imbalances and reproductive problems</li>
+<li>Higher surgical complication risk</li>
+<li>Increased mortality risk</li>
+</ul>
+
+<p>
+In some cases, being underweight may indicate an underlying medical condition such as anorexia nervosa. Medical advice should be sought when BMI values are unusually low.
+</p>
+
+<hr>
+
+<h2>Limitations of BMI</h2>
+
+<p>
+Although BMI is a useful screening tool, it does have limitations. BMI does not directly measure body fat and cannot account for muscle mass, bone density, age, sex, ethnicity, or physical activity level.
+</p>
+
+<ul>
+<li>Older adults often have more body fat than younger individuals with the same BMI</li>
+<li>Women generally have higher body fat percentages than men at equivalent BMI levels</li>
+<li>Athletes may have high BMI values due to increased muscle mass</li>
+</ul>
+
+<p>
+Despite these limitations, BMI is considered a reliable indicator for approximately 90–95% of the population when used alongside other health assessments.
+</p>
+
+<hr>
+
+<h2>BMI Formula</h2>
+
+<p><strong>US Customary Units:</strong></p>
+<p><code>BMI = 703 × weight (lb) / height² (in)</code></p>
+
+<p><strong>Metric Units (SI):</strong></p>
+<p><code>BMI = weight (kg) / height² (m)</code></p>
+
+<hr>
+
+<h2>BMI Prime</h2>
+
+<p>
+<strong>BMI Prime</strong> is the ratio of a person’s BMI to the upper normal BMI limit (25 kg/m²). It provides a quick comparison of how far an individual’s BMI deviates from the healthy range.
+</p>
+
+<p><code>BMI Prime = BMI / 25</code></p>
+
+<table class="cinfoT">
+<tr><th>Classification</th><th>BMI Prime</th></tr>
+<tr><td>Underweight</td><td>&lt; 0.74</td></tr>
+<tr><td>Normal</td><td>0.74 – 1</td></tr>
+<tr><td>Overweight</td><td>1 – 1.2</td></tr>
+<tr><td>Obese</td><td>&gt; 1.2</td></tr>
+</table>
+
+<hr>
+
+<h2>Ponderal Index (PI)</h2>
+
+<p>
+The <strong>Ponderal Index (PI)</strong> is similar to BMI but uses height cubed instead of squared. This makes it more reliable for individuals with extreme height values.
+</p>
+
+<p><strong>Metric Formula:</strong></p>
+<p><code>PI = weight (kg) / height³ (m)</code></p>
+
+<p>
+While BMI is useful for population-level analysis, PI provides better accuracy for individuals who are very tall or very short.
+</p>
+
+</section>
+<footer>
+<p>
+© 2026 Online Calculators • All Rights Reserved • Ankit Dara
+</p>
+</footer>
+
 </body>
 </html>
